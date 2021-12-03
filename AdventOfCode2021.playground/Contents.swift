@@ -18,7 +18,7 @@ extension Array where Element == Int {
     }
 }
 
-let allIncreases = depths.countIncreases()
+let allIncreases = AoCPuzzleData.depths.countIncreases()
 print("1. Overall Increases: \(allIncreases)")
 
 // Part Two ----------------
@@ -26,7 +26,7 @@ var penultimateDepth = -1
 var lastDepth = -1
 var threeMeasurementWindows = [Int]()
 
-for depth in depths {
+for depth in AoCPuzzleData.depths {
     if penultimateDepth > -1, lastDepth > -1 {
         threeMeasurementWindows.append(penultimateDepth + lastDepth + depth)
     }
@@ -37,3 +37,37 @@ for depth in depths {
 let significantIncreases = threeMeasurementWindows.countIncreases()
 print("2. Significant Increases: \(significantIncreases)")
 
+
+// MARK: - Day 2 --------------------------------------------------
+print("\n-------------------- 🎁🎄🎅 DAY TWO 🤶🎄🎁 --------------------")
+
+let forward = "forward"
+let down = "down"
+let up = "up"
+
+var xPos = 0
+var yPos = 0
+var aim = 0
+
+for instruction in AoCPuzzleData.submarineInstructions {
+    let splitValue = instruction.split(separator: " ")
+    guard splitValue.count == 2,
+          let direction = splitValue.first,
+          let distance = Int(splitValue[1]) else {
+        continue
+    }
+    if direction == forward {
+        xPos += distance
+        yPos += aim * distance
+    }
+    if direction == down {
+//        yPos += distance // Calculation for part 1
+        aim += distance
+    }
+    if direction == up {
+//        yPos -= distance // Calculation for part 1
+        aim -= distance
+    }
+}
+
+print("Horizonal position (\(xPos)) * Vertical Depth (\(yPos)) == \(xPos * yPos)")
