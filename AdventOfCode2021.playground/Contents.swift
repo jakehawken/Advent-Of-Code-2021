@@ -71,3 +71,64 @@ for instruction in AoCPuzzleData.submarineInstructions {
 }
 
 print("Horizonal position (\(xPos)) * Vertical Depth (\(yPos)) == \(xPos * yPos)")
+
+
+// MARK: - Day 3 --------------------------------------------------
+print("\n-------------------- 🎁🎄🎅 DAY THREE 🤶🎄🎁 --------------------")
+
+extension Array where Element == String {
+    struct BinaryDigitRatio {
+        let zeroes: Int
+        let ones: Int
+
+        var mostCommon: Int {
+            zeroes > ones ? 0 : 1
+        }
+
+        var leastCommon: Int {
+            zeroes > ones ? 1 : 0
+        }
+    }
+
+    func binaryDigitCount(forColumn column: Int) -> BinaryDigitRatio {
+        guard column >= 0, column < count else {
+            return BinaryDigitRatio(zeroes: 0, ones: 0)
+        }
+        var zeroes = 0
+        var ones = 0
+        for row in self {
+            let index = row.index(row.startIndex, offsetBy: column)
+            let digit = row[index]
+            if digit == "0" {
+                zeroes += 1
+            }
+            if digit == "1" {
+                ones += 1
+            }
+        }
+        return BinaryDigitRatio(zeroes: zeroes, ones: ones)
+    }
+
+    func binaryDigitCounts() -> [BinaryDigitRatio] {
+        guard let row = first else {
+            return []
+        }
+        return (0..<row.count).map(binaryDigitCount(forColumn:))
+    }
+}
+
+let ratios = AoCPuzzleData.bitBuffers.binaryDigitCounts()
+
+extension Array where Element == Int {
+    func integerFromBinaryDigits() -> Int {
+        reversed().reduce(into: (value: 0, multiplier: 1)) { partialResult, digit in
+            partialResult.value += digit * partialResult.multiplier
+            partialResult.multiplier *= 2
+        }.value
+    }
+}
+
+let gamma = ratios.map(\.mostCommon).integerFromBinaryDigits()
+let epsilon = ratios.map(\.leastCommon).integerFromBinaryDigits()
+
+print("1. Submarine power consumption: Gamma (\(gamma)) * Epsilon (\(epsilon)) == \(gamma * epsilon)")
