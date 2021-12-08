@@ -1,7 +1,8 @@
 import UIKit
+import Foundation
 
 // MARK: - Day 1 --------------------------------------------------
-print("-------------------- 🎁🎄🎅 DAY ONE 🤶🎄🎁 --------------------")
+print("---------- 🎁🎄🎅 DAY ONE 🤶🎄🎁 ----------")
 
 // Part One ----------------
 extension Array where Element == Int {
@@ -39,7 +40,7 @@ print("2. Significant Increases: \(significantIncreases)")
 
 
 // MARK: - Day 2 --------------------------------------------------
-print("\n-------------------- 🎁🎄🎅 DAY TWO 🤶🎄🎁 --------------------")
+print("\n---------- 🎁🎄🎅 DAY TWO 🤶🎄🎁 ----------")
 
 let forward = "forward"
 let down = "down"
@@ -74,46 +75,44 @@ print("Horizonal position (\(xPos)) * Vertical Depth (\(yPos)) == \(xPos * yPos)
 
 
 // MARK: - Day 3 --------------------------------------------------
-print("\n-------------------- 🎁🎄🎅 DAY THREE 🤶🎄🎁 --------------------")
+print("\n--------- 🎁🎄🎅 DAY THREE 🤶🎄🎁 ---------")
 
-extension Array where Element == String {
-    struct BinaryDigitRatio {
-        let zeroes: Int
-        let ones: Int
+// Part One ----------------
+struct BitRatio {
+    let zeroes: Int
+    let ones: Int
 
-        var mostCommon: Int {
-            zeroes > ones ? 0 : 1
-        }
-
-        var leastCommon: Int {
-            zeroes > ones ? 1 : 0
-        }
+    var mostCommon: Int {
+        zeroes > ones ? 0 : 1
     }
 
-    func binaryDigitCount(forColumn column: Int) -> BinaryDigitRatio {
+    var leastCommon: Int {
+        zeroes < ones ? 0 : 1
+    }
+}
+
+extension Array where Element == [Int] {
+    func binaryDigitCount(forColumn column: Int) -> BitRatio {
         guard column >= 0, column < count else {
-            return BinaryDigitRatio(zeroes: 0, ones: 0)
+            return BitRatio(zeroes: 0, ones: 0)
         }
         var zeroes = 0
         var ones = 0
         for row in self {
-            let index = row.index(row.startIndex, offsetBy: column)
-            let digit = row[index]
-            if digit == "0" {
+            let digit = row[column]
+            if digit == 0 {
                 zeroes += 1
             }
-            if digit == "1" {
+            if digit == 1 {
                 ones += 1
             }
         }
-        return BinaryDigitRatio(zeroes: zeroes, ones: ones)
+        return BitRatio(zeroes: zeroes, ones: ones)
     }
 
-    func binaryDigitCounts() -> [BinaryDigitRatio] {
-        guard let row = first else {
-            return []
-        }
-        return (0..<row.count).map(binaryDigitCount(forColumn:))
+    func binaryDigitCounts() -> [BitRatio] {
+        let width = first?.count ?? 0
+        return (0..<width).map(binaryDigitCount(forColumn:))
     }
 }
 
@@ -131,4 +130,62 @@ extension Array where Element == Int {
 let gamma = ratios.map(\.mostCommon).integerFromBinaryDigits()
 let epsilon = ratios.map(\.leastCommon).integerFromBinaryDigits()
 
-print("1. Submarine power consumption: Gamma (\(gamma)) * Epsilon (\(epsilon)) == \(gamma * epsilon)")
+print("1. Power consumption: Gamma (\(gamma)) * Epsilon (\(epsilon)) == \(gamma * epsilon)")
+
+// Part Two ----------------
+extension Array where Element == [Int] {
+    func filterBitBuffers(bitRatios: [BitRatio], shouldKeepBuffer: (Int, BitRatio) -> Bool) -> [[Int]] {
+        guard let width = first?.count, width == bitRatios.count else {
+            return []
+        }
+
+        var output = self
+        for column in 0..<width {  // iterating left to right through the columns
+            let ratioForColumn = bitRatios[column]
+            output = output.filter { bitBuffer in // iterating top to bottom through the rows
+                let bit = bitBuffer[column]
+                let shouldKeep = shouldKeepBuffer(bit, ratioForColumn)
+//                print("Column: \(column), Bit: \(bit), Zero count: \(ratioForColumn.zeroes), One count: \(ratioForColumn.ones), Should Keep: \(shouldKeep)")
+                return shouldKeep
+            }
+//            print("Remaining items: \(output.count)")
+            if output.count == 1 {
+                break
+            }
+        }
+
+//        print("Oxygen rating buffers: \(output) -- First, in decimal: \(output.first!.integerFromBinaryDigits())")
+        return output
+    }
+}
+
+enum LifeSupportError: String, Error, CustomStringConvertible {
+    case couldntFindOxygenRating = "!--- Couldn't find the oxygen rating. ---!"
+    case couldntFindScrubberRating = "!--- Couldn't find the CO2 scrubber rating. ---!"
+    var description: String { return rawValue }
+}
+
+let filteredOxygenBuffers = AoCPuzzleData.bitBuffers.filterBitBuffers(bitRatios: ratios) { bit, ratio -> Bool in
+    if ratio.zeroes == ratio.ones {
+        print("Zero count: \(ratio.zeroes), One count: \(ratio.ones)")
+    }
+    return (ratio.zeroes == ratio.ones) ? (bit == 1) : (bit == ratio.mostCommon)
+}
+guard filteredOxygenBuffers.count == 1,
+      let oxygenRating = filteredOxygenBuffers.first?.integerFromBinaryDigits() else {
+          print("Remaining Oxygen Buffers: \(filteredOxygenBuffers)")
+          throw LifeSupportError.couldntFindOxygenRating
+}
+
+let filteredScrubberBuffers = AoCPuzzleData.bitBuffers.filterBitBuffers(bitRatios: ratios) { bit, ratio -> Bool in
+    if ratio.zeroes == ratio.ones {
+        print("Zero count: \(ratio.zeroes), One count: \(ratio.ones)")
+    }
+    return (ratio.zeroes == ratio.ones) ? (bit == 0) : (bit == ratio.leastCommon)
+}
+guard filteredScrubberBuffers.count == 1,
+      let c02ScrubberRating = filteredScrubberBuffers.first?.integerFromBinaryDigits() else {
+    throw LifeSupportError.couldntFindScrubberRating
+}
+
+print("2. Life support rating: Oxygen Generator Rating (\(oxygenRating)) * C02 Scrubber Rating (\(c02ScrubberRating)) == \(oxygenRating * c02ScrubberRating)")
