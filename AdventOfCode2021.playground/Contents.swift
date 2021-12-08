@@ -134,27 +134,22 @@ print("1. Power consumption: Gamma (\(gamma)) * Epsilon (\(epsilon)) == \(gamma 
 
 // Part Two ----------------
 extension Array where Element == [Int] {
-    func filterBitBuffers(bitRatios: [BitRatio], shouldKeepBuffer: (Int, BitRatio) -> Bool) -> [[Int]] {
-        guard let width = first?.count, width == bitRatios.count else {
+    func filterBitBuffers(shouldKeepBuffer: (Int, BitRatio) -> Bool) -> [[Int]] {
+        guard let width = first?.count else {
             return []
         }
 
         var output = self
         for column in 0..<width {  // iterating left to right through the columns
-            let ratioForColumn = bitRatios[column]
+            let ratioForColumn = output.binaryDigitCount(forColumn: column)
             output = output.filter { bitBuffer in // iterating top to bottom through the rows
                 let bit = bitBuffer[column]
-                let shouldKeep = shouldKeepBuffer(bit, ratioForColumn)
-//                print("Column: \(column), Bit: \(bit), Zero count: \(ratioForColumn.zeroes), One count: \(ratioForColumn.ones), Should Keep: \(shouldKeep)")
-                return shouldKeep
+                return shouldKeepBuffer(bit, ratioForColumn)
             }
-//            print("Remaining items: \(output.count)")
             if output.count == 1 {
                 break
             }
         }
-
-//        print("Oxygen rating buffers: \(output) -- First, in decimal: \(output.first!.integerFromBinaryDigits())")
         return output
     }
 }
@@ -165,22 +160,15 @@ enum LifeSupportError: String, Error, CustomStringConvertible {
     var description: String { return rawValue }
 }
 
-let filteredOxygenBuffers = AoCPuzzleData.bitBuffers.filterBitBuffers(bitRatios: ratios) { bit, ratio -> Bool in
-    if ratio.zeroes == ratio.ones {
-        print("Zero count: \(ratio.zeroes), One count: \(ratio.ones)")
-    }
+let filteredOxygenBuffers = AoCPuzzleData.bitBuffers.filterBitBuffers { bit, ratio -> Bool in
     return (ratio.zeroes == ratio.ones) ? (bit == 1) : (bit == ratio.mostCommon)
 }
 guard filteredOxygenBuffers.count == 1,
       let oxygenRating = filteredOxygenBuffers.first?.integerFromBinaryDigits() else {
-          print("Remaining Oxygen Buffers: \(filteredOxygenBuffers)")
           throw LifeSupportError.couldntFindOxygenRating
 }
 
-let filteredScrubberBuffers = AoCPuzzleData.bitBuffers.filterBitBuffers(bitRatios: ratios) { bit, ratio -> Bool in
-    if ratio.zeroes == ratio.ones {
-        print("Zero count: \(ratio.zeroes), One count: \(ratio.ones)")
-    }
+let filteredScrubberBuffers = AoCPuzzleData.bitBuffers.filterBitBuffers { bit, ratio -> Bool in
     return (ratio.zeroes == ratio.ones) ? (bit == 0) : (bit == ratio.leastCommon)
 }
 guard filteredScrubberBuffers.count == 1,
